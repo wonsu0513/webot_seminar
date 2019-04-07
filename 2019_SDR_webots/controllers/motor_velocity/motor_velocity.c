@@ -19,7 +19,6 @@ int main(int argc, char **argv)
  
   WbNodeRef mybot = wb_supervisor_node_get_from_def("e-puck");
   WbFieldRef translationField = wb_supervisor_node_get_field(mybot, "translation");
-  WbFieldRef rotationField = wb_supervisor_node_get_field(mybot, "rotation");
 
 
    WbDeviceTag left_motor = wb_robot_get_device("left wheel motor");
@@ -50,32 +49,25 @@ int main(int argc, char **argv)
    double left_speed= 0;
    double right_speed = 0;
    
-   bool wonsu_zzang = true;
-
-   double initial_position[3] = {0.0, 0.0, 0.0 };
-   double initial_angle[3] = {0.0, 1.0, 0.0, 0.0};
-
-   wb_supervisor_field_set_sf_vec3f(translationField, initial_position);
-   //wb_supervisor_field_set_sf_rotation(rotationField, initial_angle);
-
-
 
    while (wb_robot_step(TIME_STEP) != -1) {
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
-    const double *rotation = wb_supervisor_field_get_sf_rotation(rotationField);
-  
 
     const WbMouseState mouse_state = wb_mouse_get_state();
-    
-    
     if (mouse_state.left) {
         wb_motor_set_velocity(left_motor, 0);
-        wb_motor_set_velocity(right_motor,0); 
-        printf("mouse: %g, %g\n", mouse_state.x, mouse_state.z);
-        printf("robot: %f, %f, %f \n", translation[0], translation[2], rotation[3]);
-         
-    }
+        wb_motor_set_velocity(right_motor, 0); 
+        printf("Click detected at:\n");
+        printf("u: %g\n", mouse_state.u);
+        printf("v: %g\n", mouse_state.v);
+        printf("x: %g\n", mouse_state.x);
+        printf("y: %g\n", mouse_state.y);
+        printf("z: %g\n", mouse_state.z);
+        printf("%f, %f \n", translation[0], translation[2]);
+        
+     }
   
+
     else
     {
       ps0_data = wb_distance_sensor_get_value(wonsu_ps0);
