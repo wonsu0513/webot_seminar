@@ -136,127 +136,79 @@ int main(int argc, char **argv)
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
     const double *rotation = wb_supervisor_field_get_sf_rotation(rotationField);
 
-    
-    const WbMouseState mouse_state = wb_mouse_get_state();
-    double mouse_goal_position[3] =  {mouse_state.x, mouse_state.z, -1.5708};
     double robot_current_position[3] = {translation[0], translation[2], rotation[3]};
     ps0_data = wb_distance_sensor_get_value(wonsu_ps0);
     ps7_data = wb_distance_sensor_get_value(wonsu_ps7);
 
+    //printf("ps0 = %f, ps7 = %f \n", ps0_data, ps7_data);  
 
-    if (mouse_state.left){
-        
-       //printf("Wheel Speed: %f, %f\n",ps7_data,ps0_data);
-        
-         if (ps7_data > 60) {
-            // turn right
-            left_speed += 0.8 * MAX_SPEED;
-            right_speed -= 0.8 * MAX_SPEED;
-          } 
-          else if (ps0_data > 60) {
-            // turn left
-            left_speed -= 0.8 * MAX_SPEED;
-            right_speed += 0.8 * MAX_SPEED;
-          }
-          else if( ps7_data > 60 || ps0_data > 60){
-             left_speed = -MAX_SPEED;
-             right_speed = -MAX_SPEED;
-          }
-          else
-          {
-            const double *wonsu = robot_controller(robot_current_position, mouse_goal_position);
-            left_speed=wonsu[0];
-            right_speed=wonsu[1];
-          }
-          
-          if (left_speed > MAX_SPEED){
-            left_speed = MAX_SPEED;
-          }
-          if (left_speed < -MAX_SPEED){
-            left_speed = -MAX_SPEED;
-          }
-          if (right_speed > MAX_SPEED){
-            right_speed = MAX_SPEED;
-          }
-          if (right_speed < -MAX_SPEED){
-            right_speed =  -MAX_SPEED;
-          }    
-                 
-        wb_motor_set_velocity(left_motor, left_speed);
-        wb_motor_set_velocity(right_motor,right_speed); 
-    }  
-        
-    else
-    {
-      //printf("ps0 = %f, ps7 = %f \n", ps0_data, ps7_data);  
+    key_value =  wb_keyboard_get_key();
+     
+    
+    if(key_value != -1)
+    { 
+      if (key_value == 315){
+        wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
+        wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
   
-      key_value =  wb_keyboard_get_key();
-       
-      
-      if(key_value != -1)
-      { 
-        if (key_value == 315){
-          wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
-          wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
-    
-        }
-        else if(key_value == 317){
-          wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
-          wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
-    
-        }
-        else if(key_value == 314){
-          wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
-          wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
-        }
-        else if(key_value == 316){
-          wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
-          wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
-        }
-        else{
-          wb_motor_set_velocity(left_motor, 0);
-          wb_motor_set_velocity(right_motor, 0);
-         }
+      }
+      else if(key_value == 317){
+        wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
+        wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
+  
+      }
+      else if(key_value == 314){
+        wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
+        wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
+      }
+      else if(key_value == 316){
+        wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
+        wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
+      }
+      else{
+        wb_motor_set_velocity(left_motor, 0);
+        wb_motor_set_velocity(right_motor, 0);
        }
-       
-       else
-       {
-         if (ps7_data > 60) {
-            // turn right
-            left_speed += 0.8 * MAX_SPEED;
-            right_speed -= 0.8 * MAX_SPEED;
-          } 
-          else if (ps0_data > 60) {
-            // turn left
-            left_speed -= 0.8 * MAX_SPEED;
-            right_speed += 0.8 * MAX_SPEED;
-          }
-          else if( ps7_data > 60 || ps0_data > 60){
-             left_speed = -MAX_SPEED;
-             right_speed = -MAX_SPEED;
-          }
-          else
-          {
-            left_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
-            right_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
-          }
-          
-          if (left_speed > MAX_SPEED){
-            left_speed = MAX_SPEED;
-          }
-          if (left_speed < -MAX_SPEED){
-            left_speed = -MAX_SPEED;
-          }
-          if (right_speed > MAX_SPEED){
-            right_speed = MAX_SPEED;
-          }
-          if (right_speed < -MAX_SPEED){
-            right_speed =  -MAX_SPEED;
-          }         
-          
-          wb_motor_set_velocity(left_motor, left_speed);
-          wb_motor_set_velocity(right_motor, right_speed);
-      }  
+     }
+     
+     else
+     {
+       if (ps7_data > 60) {
+          // turn right
+          left_speed += 0.8 * MAX_SPEED;
+          right_speed -= 0.8 * MAX_SPEED;
+        } 
+        else if (ps0_data > 60) {
+          // turn left
+          left_speed -= 0.8 * MAX_SPEED;
+          right_speed += 0.8 * MAX_SPEED;
+        }
+        else if( ps7_data > 60 || ps0_data > 60){
+           left_speed = -MAX_SPEED;
+           right_speed = -MAX_SPEED;
+        }
+        else
+        {
+          left_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
+          right_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
+        }
+        
+        if (left_speed > MAX_SPEED){
+          left_speed = MAX_SPEED;
+        }
+        if (left_speed < -MAX_SPEED){
+          left_speed = -MAX_SPEED;
+        }
+        if (right_speed > MAX_SPEED){
+          right_speed = MAX_SPEED;
+        }
+        if (right_speed < -MAX_SPEED){
+          right_speed =  -MAX_SPEED;
+        }         
+        
+        wb_motor_set_velocity(left_motor, left_speed);
+        wb_motor_set_velocity(right_motor, right_speed);
+        
      }         
   };
 

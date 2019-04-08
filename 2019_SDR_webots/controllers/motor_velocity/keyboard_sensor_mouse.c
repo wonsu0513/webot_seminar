@@ -135,9 +135,8 @@ int main(int argc, char **argv)
     
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
     const double *rotation = wb_supervisor_field_get_sf_rotation(rotationField);
-
-    
     const WbMouseState mouse_state = wb_mouse_get_state();
+
     double mouse_goal_position[3] =  {mouse_state.x, mouse_state.z, -1.5708};
     double robot_current_position[3] = {translation[0], translation[2], rotation[3]};
     ps0_data = wb_distance_sensor_get_value(wonsu_ps0);
