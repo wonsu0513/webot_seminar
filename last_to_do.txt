@@ -7,20 +7,30 @@
 #include <webots/keyboard.h>
 #include <webots/distance_sensor.h>
 #include <webots/supervisor.h>
-#include <webots/gps.h>
+#include <webots/mouse.h>
 
 
 #define TIME_STEP 64
 #define MAX_SPEED 6.28
 
+bool wonsu_zzang = false;
+
 
 
 double* robot_controller(double* start_pos, double* target_pos) {
+    double d = 0.070;
+    static double motor_velocity[2];
+    
+    //printf("robot: x = %f, y = %f, theta = %f \n",start_pos[0],start_pos[1],start_pos[2]);        
+    //printf("mouse: x = %f, y = %f, theta = %f \n",target_pos[0],target_pos[1],target_pos[2]);        
+	
+    double k_rho = 5;        //should be larger than 0, i.e, k_rho > 0
+    double k_alpha = 5;      // k_alpha - k_rho > 0
+    double k_beta = -0.08;     // should be smaller than 0, i.e, k_beta < 0
+	
+    // your code
 
-	// your code
-
-
-      return motor_velocity;
+    return motor_velocity;
 }
 
 
@@ -37,11 +47,9 @@ int main(int argc, char **argv)
    WbDeviceTag right_motor = wb_robot_get_device("right wheel motor");
    WbDeviceTag wonsu_ps0 = wb_robot_get_device("ps0");
    WbDeviceTag wonsu_ps7 = wb_robot_get_device("ps7");
-   WbDeviceTag gps = wb_robot_get_device("gps");
 
    wb_distance_sensor_enable(wonsu_ps0, TIME_STEP);
    wb_distance_sensor_enable(wonsu_ps7, TIME_STEP);
-   wb_gps_enable(gps, TIME_STEP);
 
    wb_motor_set_position(left_motor, INFINITY);
    wb_motor_set_position(right_motor, INFINITY);
@@ -49,6 +57,9 @@ int main(int argc, char **argv)
    wb_motor_set_velocity(right_motor, 0);
    
    wb_keyboard_enable(TIME_STEP);
+   
+   wb_mouse_enable(TIME_STEP);
+   wb_mouse_enable_3d_position();
    
    
    WbUserInputEvent event_type;
@@ -59,27 +70,140 @@ int main(int argc, char **argv)
    double left_speed= 0;
    double right_speed = 0;
 
-   double initial_position[3] = {0.1, 0.0, 0.1};
+   double initial_position[3] = {0.1, 0.0, 0.1 };
    double initial_angle[4] = {0.0, 1.0, 0.0, 0.0};
 
    wb_supervisor_field_set_sf_vec3f(translationField, initial_position);
-
+   //wb_supervisor_field_set_sf_rotation(rotationField, initial_angle);
 
    while (wb_robot_step(TIME_STEP) != -1) {
+    
     const double *translation = wb_supervisor_field_get_sf_vec3f(translationField);
     const double *rotation = wb_supervisor_field_get_sf_rotation(rotationField);
-    const double *gps_values = wb_gps_get_values(gps);
 
+    
+    const WbMouseState mouse_state = wb_mouse_get_state();
+    double mouse_goal_position[3] =  {mouse_state.x, mouse_state.z, -1.5708};
     double robot_current_position[3] = {translation[0], translation[2], rotation[3]};
-     
-    double mouse_goal_position[3] =  {0.8, 0.8, -1.5708/2};
+    ps0_data = wb_distance_sensor_get_value(wonsu_ps0);
+    ps7_data = wb_distance_sensor_get_value(wonsu_ps7);
 
 
-    const double *wonsu = robot_controller(robot_current_position, mouse_goal_position);
-
-    wb_motor_set_velocity(left_motor, wonsu[0]);
-    wb_motor_set_velocity(right_motor,wonsu[1]); 
+    if (mouse_state.left){
+        
+       //printf("Wheel Speed: %f, %f\n",ps7_data,ps0_data);
+        
+         if (ps7_data > 60) {
+            // turn right
+            left_speed += 0.8 * MAX_SPEED;
+            right_speed -= 0.8 * MAX_SPEED;
+          } 
+          else if (ps0_data > 60) {
+            // turn left
+            left_speed -= 0.8 * MAX_SPEED;
+            right_speed += 0.8 * MAX_SPEED;
+          }
+          else if( ps7_data > 60 || ps0_data > 60){
+             left_speed = -MAX_SPEED;
+             right_speed = -MAX_SPEED;
+          }
+          else
+          {
+            const double *wonsu = robot_controller(robot_current_position, mouse_goal_position);
+            left_speed=wonsu[0];
+            right_speed=wonsu[1];
+          }
+          
+          if (left_speed > MAX_SPEED){
+            left_speed = MAX_SPEED;
+          }
+          if (left_speed < -MAX_SPEED){
+            left_speed = -MAX_SPEED;
+          }
+          if (right_speed > MAX_SPEED){
+            right_speed = MAX_SPEED;
+          }
+          if (right_speed < -MAX_SPEED){
+            right_speed =  -MAX_SPEED;
+          }    
+                 
+        wb_motor_set_velocity(left_motor, left_speed);
+        wb_motor_set_velocity(right_motor,right_speed); 
+    }
   
+        
+    else
+    {
+      //printf("ps0 = %f, ps7 = %f \n", ps0_data, ps7_data);  
+  
+      key_value =  wb_keyboard_get_key();
+       
+      
+      if(key_value != -1)
+      { 
+        if (key_value == 315){
+          wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
+          wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
+    
+        }
+        else if(key_value == 317){
+          wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
+          wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
+    
+        }
+        else if(key_value == 314){
+          wb_motor_set_velocity(left_motor, -0.3*MAX_SPEED);
+          wb_motor_set_velocity(right_motor, 0.3*MAX_SPEED);
+        }
+        else if(key_value == 316){
+          wb_motor_set_velocity(left_motor, 0.3*MAX_SPEED);
+          wb_motor_set_velocity(right_motor, -0.3*MAX_SPEED);
+        }
+        else{
+          wb_motor_set_velocity(left_motor, 0);
+          wb_motor_set_velocity(right_motor, 0);
+         }
+       }
+       
+       else
+       {
+         if (ps7_data > 60) {
+            // turn right
+            left_speed += 0.8 * MAX_SPEED;
+            right_speed -= 0.8 * MAX_SPEED;
+          } 
+          else if (ps0_data > 60) {
+            // turn left
+            left_speed -= 0.8 * MAX_SPEED;
+            right_speed += 0.8 * MAX_SPEED;
+          }
+          else if( ps7_data > 60 || ps0_data > 60){
+             left_speed = -MAX_SPEED;
+             right_speed = -MAX_SPEED;
+          }
+          else
+          {
+            left_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
+            right_speed = (int)rand()%((int)MAX_SPEED + 1 - 0) + 0;
+          }
+          
+          if (left_speed > MAX_SPEED){
+            left_speed = MAX_SPEED;
+          }
+          if (left_speed < -MAX_SPEED){
+            left_speed = -MAX_SPEED;
+          }
+          if (right_speed > MAX_SPEED){
+            right_speed = MAX_SPEED;
+          }
+          if (right_speed < -MAX_SPEED){
+            right_speed =  -MAX_SPEED;
+          }         
+          
+          wb_motor_set_velocity(left_motor, left_speed);
+          wb_motor_set_velocity(right_motor, right_speed);
+      }  
+     }         
   };
 
   wb_robot_cleanup();
